@@ -42,7 +42,7 @@ class Ui_MainWindow(QtGui.QMainWindow):
         MainWindow.setMaximumSize(QtCore.QSize(665, 548))
         MainWindow.setTabShape(QtWidgets.QTabWidget.Rounded)
         MainWindow.setDockOptions(QtWidgets.QMainWindow.AllowNestedDocks|QtWidgets.QMainWindow.AllowTabbedDocks|QtWidgets.QMainWindow.AnimatedDocks)
-        MainWindow.setWindowTitle("SuperADAM .h5 detector images substractor")
+        MainWindow.setWindowTitle("SuperADAM .h5 detector images subtractor")
         MainWindow.setWindowIcon(QtGui.QIcon(current_dir + "\icon.png"))
         MainWindow.setIconSize(QtCore.QSize(30, 30))
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -488,7 +488,7 @@ class Ui_MainWindow(QtGui.QMainWindow):
     def menu_info(self):
         msgBox = QtWidgets.QMessageBox()
         msgBox.setWindowIcon(QtGui.QIcon(os.path.dirname(os.path.realpath(__file__)).replace("\\", "/") + "\icon.png"))
-        msgBox.setText("SuperADAM .h5 scan substractor. " + self.actionVersion.text() + "\n\n"
+        msgBox.setText("SuperADAM .h5 scan subtractor. " + self.actionVersion.text() + "\n\n"
                                                                                             "Alexey.Klechikov@gmail.com\n\n"
                                                                                             "Check new version at https://github.com/Alexey-Klechikov/Scans-substractor/releases")
         msgBox.exec_()
