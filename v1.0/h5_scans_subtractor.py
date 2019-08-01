@@ -490,7 +490,7 @@ class Ui_MainWindow(QtGui.QMainWindow):
         msgBox.setWindowIcon(QtGui.QIcon(os.path.dirname(os.path.realpath(__file__)).replace("\\", "/") + "\icon.png"))
         msgBox.setText("SuperADAM .h5 scan subtractor. " + self.actionVersion.text() + "\n\n"
                                                                                             "Alexey.Klechikov@gmail.com\n\n"
-                                                                                            "Check new version at https://github.com/Alexey-Klechikov/Scans-substractor/releases")
+                                                                                            "Check new version at https://github.com/Alexey-Klechikov/Scans-Subtractor/releases")
         msgBox.exec_()
 
 if __name__ == "__main__":
