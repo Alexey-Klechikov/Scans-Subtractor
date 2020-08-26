@@ -184,11 +184,12 @@ class Ui_MainWindow(QtGui.QMainWindow):
         self.horizontalSlider_result_aspectRatio.setMaximum(30)
         self.horizontalSlider_result_aspectRatio.setValue(1)
         self.label_result_2Dmap_View_scale = QtWidgets.QLabel(self.groupBox_result)
-        self.__create_element(self.label_result_2Dmap_View_scale, [400, 22+self.groupbox_os_displ, 40, 22], "label_result_2Dmap_View_scale", text="View", font=font_ee)
+        self.__create_element(self.label_result_2Dmap_View_scale, [395, 22+self.groupbox_os_displ, 40, 22], "label_result_2Dmap_View_scale", text="View", font=font_ee)
         self.comboBox_result_2Dmap_scale = QtWidgets.QComboBox(self.groupBox_result)
-        self.__create_element(self.comboBox_result_2Dmap_scale, [430, 22+self.groupbox_os_displ, 50, 22], "comboBox_result_2Dmap_scale", font=font_ee, combo=["Log", "Lin"])
-        self.lineEdit_result_operation_sign = QtWidgets.QLineEdit(self.groupBox_result)
-        self.__create_element(self.lineEdit_result_operation_sign, [520, 22+self.groupbox_os_displ, 20, 22], "lineEdit_result_operation_sign", text=" - ", font=font_ee)
+        self.__create_element(self.comboBox_result_2Dmap_scale, [425, 22+self.groupbox_os_displ, 50, 22], "comboBox_result_2Dmap_scale", font=font_ee, combo=["Log", "Lin"])
+        self.comboBox_result_operation_sign = QtWidgets.QComboBox(self.groupBox_result)
+        self.__create_element(self.comboBox_result_operation_sign, [500, 22 + self.groupbox_os_displ, 40, 22], "comboBox_result_operation_sign", font=font_ee, combo=["-", "+"])
+
         self.lineEdit_result_operation = QtWidgets.QLineEdit(self.groupBox_result)
         self.__create_element(self.lineEdit_result_operation, [545, 22+self.groupbox_os_displ, 130, 22], "lineEdit_result_operation", stylesheet="color:rgb(0,0,0)", enabled=False, font=font_ee)
         self.pushButton_result_swapAB = QtWidgets.QPushButton(self.groupBox_result)
@@ -246,6 +247,7 @@ class GUI(Ui_MainWindow):
         # Actions on clicks
         self.toolButton_scan_A.clicked.connect(self.f_button_importScan)
         self.toolButton_scan_B.clicked.connect(self.f_button_importScan)
+
         self.comboBox_scan_A_pointNumber.currentIndexChanged.connect(self.f_diffLine)
         self.comboBox_scan_A_polarisation.currentIndexChanged.connect(self.f_diffLine)
         self.comboBox_scan_A_type.currentIndexChanged.connect(self.f_interface_change)
@@ -254,23 +256,26 @@ class GUI(Ui_MainWindow):
         self.comboBox_scan_B_type.currentIndexChanged.connect(self.f_interface_change)
         self.comboBox_result_2Dmap_scale.currentIndexChanged.connect(self.f_res_draw)
         self.comboBox_result_2Dmap_scale.currentIndexChanged.connect(self.f_buttons_roi)
+        self.comboBox_result_operation_sign.currentIndexChanged.connect(self.f_diffLine)
+
         self.pushButton_result_export.clicked.connect(self.f_button_exportResult)
+        self.pushButton_result_ROI.clicked.connect(self.f_buttons_roi)
+        self.pushButton_result_roi_turn.clicked.connect(self.f_buttons_roi)
+        self.pushButton_result_integratedRoi_export.clicked.connect(self.f_button_roi_export)
+        self.pushButton_result_swapAB.clicked.connect(self.f_diffLine)
 
         self.checkBox_result_f_numberOfPixels_reduce_by2.stateChanged.connect(self.f_numberOfPixels_reduce)
         self.checkBox_result_f_numberOfPixels_reduce_by4.stateChanged.connect(self.f_numberOfPixels_reduce)
         self.checkBox_result_f_numberOfPixels_reduce_by8.stateChanged.connect(self.f_numberOfPixels_reduce)
-
-        self.pushButton_result_swapAB.clicked.connect(self.f_diffLine)
         self.checkBox_result_devideByMonitor.stateChanged.connect(self.f_res_draw)
+
         self.horizontalSlider_result_aspectRatio.valueChanged.connect(self.f_res_draw)
-        self.pushButton_result_ROI.clicked.connect(self.f_buttons_roi)
-        self.pushButton_result_roi_turn.clicked.connect(self.f_buttons_roi)
-        self.pushButton_result_integratedRoi_export.clicked.connect(self.f_button_roi_export)
+
         self.lineEdit_result_roi_left.editingFinished.connect(self.f_buttons_roi)
         self.lineEdit_result_roi_right.editingFinished.connect(self.f_buttons_roi)
         self.lineEdit_result_roi_top.editingFinished.connect(self.f_buttons_roi)
         self.lineEdit_result_roi_bottom.editingFinished.connect(self.f_buttons_roi)
-        self.lineEdit_result_operation_sign.editingFinished.connect(self.f_diffLine)
+
         self.action_version.triggered.connect(self.f_menu_info)
 
         # use arrays to keep old "lines" and redraw only if they are different from new ones
@@ -392,9 +397,7 @@ class GUI(Ui_MainWindow):
     def f_diffLine(self):
 
         if not self.sender().objectName() == "pushButton_result_swapAB":
-            line = ""
 
-            if self.lineEdit_result_operation_sign.text() not in ["-", " -", "- ", "+", " +", "+ "]: self.lineEdit_result_operation_sign.setText(" - ")
             if self.comboBox_scan_A_type.currentText() == "Single point" and not self.comboBox_scan_A_pointNumber.currentText() == "":
                 self.line_A[0] = "A(" + str(self.comboBox_scan_A_polarisation.currentText()) + ")(" + str(self.comboBox_scan_A_pointNumber.currentText()) + ")"
             elif self.comboBox_scan_A_type.currentText() == "Integrated image" and not self.comboBox_scan_A_polarisation.currentText() == "":
@@ -414,23 +417,23 @@ class GUI(Ui_MainWindow):
             elif self.line_A[0] == "" and not self.line_B[0] == "": line = self.line_B[0]
             # otherwice check if a line is already presented and what is the first. Keep the same order
             else:
-                if self.lineEdit_result_operation.text().find("A(") == 0: line = self.line_A[0] + self.lineEdit_result_operation_sign.text() + self.line_B[0]
-                else: line = self.line_B[0] + self.lineEdit_result_operation_sign.text() + self.line_A[0]
+                if self.lineEdit_result_operation.text().find("A(") == 0: line = self.line_A[0] + self.comboBox_result_operation_sign.currentText() + self.line_B[0]
+                else: line = self.line_B[0] + self.comboBox_result_operation_sign.currentText() + self.line_A[0]
 
             self.lineEdit_result_operation.setText(line)
 
-            if not self.line_A[0] == self.line_A[1]: self.draw_det_A_frame()
+            if not self.line_A[0] == self.line_A[1]: self.f_detA_frame_draw()
             self.line_A[1] = self.line_A[0]
 
-            if not self.line_B[0] == self.line_B[1]: self.draw_det_B_frame()
+            if not self.line_B[0] == self.line_B[1]: self.f_detB_frame_draw()
             self.line_B[1] = self.line_B[0]
 
         else:
             if self.lineEdit_result_operation.text() == "": return
-            if not self.lineEdit_result_operation.text().find(self.lineEdit_result_operation_sign.text()) > 0: return
+            if not self.lineEdit_result_operation.text().find(self.comboBox_result_operation_sign.currentText()) > 0: return
             if self.lineEdit_result_operation.text().find(self.line_A[0]) == 0: # then A scan is first
-                line = self.line_B[0] + self.lineEdit_result_operation_sign.text() + self.line_A[0]
-            else: line = self.line_A[0] + self.lineEdit_result_operation_sign.text() + self.line_B[0]
+                line = self.line_B[0] + self.comboBox_result_operation_sign.currentText() + self.line_A[0]
+            else: line = self.line_A[0] + self.comboBox_result_operation_sign.currentText() + self.line_B[0]
 
             self.lineEdit_result_operation.setText(line)
 
@@ -439,7 +442,7 @@ class GUI(Ui_MainWindow):
         if self.roi_show == 1: self.f_buttons_roi()
 
     # draw graphs
-    def draw_det_A_frame(self):
+    def f_detA_frame_draw(self):
 
         self.graphicsView_scan_A.clear()
 
@@ -470,8 +473,9 @@ class GUI(Ui_MainWindow):
             colmap = pg.ColorMap(np.array([0.0, 0.1, 1.0]), np.array([[0, 0, 255, 255], [255, 0, 0, 255], [0, 255, 0, 255]], dtype=np.ubyte))
             self.graphicsView_scan_A.setColorMap(colmap)
 
-    def draw_det_B_frame(self):
-        # see comments in draw_det_A_frame
+    def f_detB_frame_draw(self):
+
+        # see comments in f_detA_frame_draw
         self.graphicsView_scan_B.clear()
 
         if self.lineEdit_scan_B_name.text() == "" or self.comboBox_scan_B_pointNumber.currentText() == "" or self.comboBox_scan_B_polarisation.currentText() == "": return
@@ -504,7 +508,7 @@ class GUI(Ui_MainWindow):
         # Subtract 2D map only from other 2D map
         if (self.comboBox_scan_A_type.currentText() == "2D map" and not self.comboBox_scan_B_type.currentText() == "2D map") or (self.comboBox_scan_B_type.currentText() == "2D map" and not self.comboBox_scan_A_type.currentText() == "2D map"): return
 
-        if self.lineEdit_result_operation.text().find("()") > -1 or self.lineEdit_result_operation.text() in ["", self.lineEdit_result_operation_sign.text()] : return
+        if self.lineEdit_result_operation.text().find("()") > -1 or self.lineEdit_result_operation.text() in ["", self.comboBox_result_operation_sign.currentText()] : return
         if not self.lineEdit_scan_A_name.text() == "" and (self.comboBox_scan_A_pointNumber.currentText() == "" or self.comboBox_scan_A_polarisation.currentText() == ""): return
         if not self.lineEdit_scan_B_name.text() == "" and (self.comboBox_scan_B_pointNumber.currentText() == "" or self.comboBox_scan_B_polarisation.currentText() == ""): return
 
@@ -563,7 +567,7 @@ class GUI(Ui_MainWindow):
 
         RES = np.swapaxes(RES, 0,1)
 
-        self.res = RES if self.comboBox_result_2Dmap_scale.currentText() == "Lin" else np.log10(np.where(RES < 1, 0.1, RES))
+        self.res = RES if self.comboBox_result_2Dmap_scale.currentText() == "Lin" else np.log10(np.where(RES < 1, 1, RES))
 
         scale_low, scale_high = np.min(self.res), np.max(self.res)
         self.graphicsView_result.setImage(self.res, scale=(1, self.horizontalSlider_result_aspectRatio.value()))
@@ -573,8 +577,8 @@ class GUI(Ui_MainWindow):
         if not self.detectorImage_B == []:
             self.graphicsView_scan_B.setImage(self.detectorImage_B, axes={'x': 1, 'y': 0}, levels=(0, 0.1), scale=(1, self.horizontalSlider_result_aspectRatio.value()))
 
-        self.graphicsView_result.ui.histogram.setHistogramRange(scale_low, scale_high)
-        self.graphicsView_result.ui.histogram.setLevels(scale_low, scale_high)
+        self.graphicsView_result.ui.histogram.setHistogramRange(scale_low*[2 if scale_low < 0 else 0.5][0], scale_high*0.7)
+        self.graphicsView_result.ui.histogram.setLevels(scale_low*[2 if scale_low < 0 else 0.5][0], scale_high*0.7)
 
         self.statusbar.showMessage('Action "' + self.lineEdit_result_operation.text() + '" is performed.')
 
