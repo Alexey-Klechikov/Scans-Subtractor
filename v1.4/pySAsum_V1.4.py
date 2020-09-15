@@ -142,11 +142,11 @@ class Ui_MainWindow(QtGui.QMainWindow):
         self.__create_element(self.groupBox_result, [320, 6-self.groupbox_os_displ, 775, 760+self.groupbox_os_displ], "groupBox_result")
         # ROI part is hidden by default
         self.graphicsView_result_integratedRoi = pg.PlotWidget(self.groupBox_result)
-        self.__create_element(self.graphicsView_result_integratedRoi, [3, 440+self.groupbox_os_displ, 770, 265], "graphicsView_result_integratedRoi")
+        self.__create_element(self.graphicsView_result_integratedRoi, [13, 440+self.groupbox_os_displ, 770, 265], "graphicsView_result_integratedRoi")
         self.graphicsView_result_integratedRoi.getAxis("bottom").tickFont = font_graphs
         self.graphicsView_result_integratedRoi.getAxis("bottom").setStyle(tickTextOffset=10)
         self.graphicsView_result_integratedRoi.getAxis("left").tickFont = font_graphs
-        self.graphicsView_result_integratedRoi.getAxis("left").setStyle(tickTextOffset=10)
+        self.graphicsView_result_integratedRoi.getAxis("left").setStyle(tickTextOffset=5)
         self.graphicsView_result_integratedRoi.showAxis("top")
         self.graphicsView_result_integratedRoi.getAxis("top").setStyle(showValues=False)
         self.graphicsView_result_integratedRoi.showAxis("right")
@@ -282,7 +282,7 @@ class GUI(Ui_MainWindow):
         self.line_A, self.line_B = ["", ""], ["", ""]
         self.roi_show, self.roi_turn, self.roi_draw_result, self.roi_initial = 0, 0, [], []
         self.detectorImage_A, self.detectorImage_B = [], []
-        self.res = []
+        self.res_lin, self.res_draw = [], []
 
         # I will use self.interface_A and self.interface_B to track what was
         # changed on the form and do changes without creating too many functions
@@ -567,10 +567,11 @@ class GUI(Ui_MainWindow):
 
         RES = np.swapaxes(RES, 0,1)
 
-        self.res = RES if self.comboBox_result_2Dmap_scale.currentText() == "Lin" else np.log10(np.where(RES < 1, 1, RES))
+        self.res_lin = RES
+        self.res_draw = RES if self.comboBox_result_2Dmap_scale.currentText() == "Lin" else np.log10(np.where(RES < 1, 1, RES))
 
-        scale_low, scale_high = np.min(self.res), np.max(self.res)
-        self.graphicsView_result.setImage(self.res, scale=(1, self.horizontalSlider_result_aspectRatio.value()))
+        scale_low, scale_high = np.min(self.res_draw), np.max(self.res_draw)
+        self.graphicsView_result.setImage(self.res_draw, scale=(1, self.horizontalSlider_result_aspectRatio.value()))
 
         if not self.detectorImage_A == []:
             self.graphicsView_scan_A.setImage(self.detectorImage_A, axes={'x': 1, 'y': 0}, levels=(0, 0.1), scale=(1, self.horizontalSlider_result_aspectRatio.value()))
@@ -643,15 +644,17 @@ class GUI(Ui_MainWindow):
 
         # for some reason I cant just plot an array (might be the problem with export of 2d arrays from hdf5), I do it in lame way instead
         if self.roi_turn == 0:
-            for index, i in enumerate(self.res):
+            for index, i in enumerate(self.res_lin):
                 if index < int(self.lineEdit_result_roi_left.text()) or index > int(self.lineEdit_result_roi_right.text()): continue
                 plot_x.append(index)
                 plot_y.append(i[int(self.lineEdit_result_roi_top.text()) : int(self.lineEdit_result_roi_bottom.text())].sum())
         else:
-            for index, i in enumerate(np.swapaxes(self.res, 0, 1)):
+            for index, i in enumerate(np.swapaxes(self.res_lin, 0, 1)):
                 if index < int(self.lineEdit_result_roi_top.text()) or index > int(self.lineEdit_result_roi_bottom.text()): continue
                 plot_x.append(index)
                 plot_y.append(i[int(self.lineEdit_result_roi_left.text()) : int(self.lineEdit_result_roi_right.text())].sum())
+
+        plot_y = plot_y if self.comboBox_result_2Dmap_scale.currentText() == "Lin" else np.log10(np.where(np.array(plot_y) < 1, 1, plot_y))
 
         self.roi_plot_export = [plot_x, plot_y]
 
@@ -661,7 +664,7 @@ class GUI(Ui_MainWindow):
         ####### square
         if self.sender().objectName() in ["comboBox_scan_A_type", "comboBox_scan_B_type"]:
             if self.comboBox_scan_A_type.currentText() == "2D map" or self.comboBox_scan_B_type.currentText() == "2D map":
-                self.lineEdit_result_roi_bottom.setText(str(self.res.shape[1]))
+                self.lineEdit_result_roi_bottom.setText(str(res.shape[1]))
                 self.lineEdit_result_roi_top.setText("0")
             elif not self.roi_initial == []:
                 self.lineEdit_result_roi_bottom.setText(self.roi_initial[2])
@@ -686,7 +689,7 @@ class GUI(Ui_MainWindow):
 
         with open(dir + "/ROI (" + self.lineEdit_result_operation.text() + ").dat", "w") as new_file_roi:
             for i in range(0, len(self.roi_plot_export[0])):
-                new_file_roi.write(str(self.roi_plot_export[0][i]) + " " + str(int(round(self.roi_plot_export[1][i]))) )
+                new_file_roi.write(str(self.roi_plot_export[0][i]) + " " + str(self.roi_plot_export[1][i]) )
                 new_file_roi.write("\n")
 
 if __name__ == "__main__":
