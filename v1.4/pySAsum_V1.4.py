@@ -215,6 +215,8 @@ class Ui_MainWindow(QtGui.QMainWindow):
         self.__create_element(self.pushButton_result_export, [620, 735+self.groupbox_os_displ, 151, 22], "pushButton_result_export", text="Export result (2D)", font=font_headline)
         self.pushButton_result_ROI = QtWidgets.QPushButton(self.groupBox_result)
         self.__create_element(self.pushButton_result_ROI, [535, 735+self.groupbox_os_displ, 80, 22], "pushButton_result_ROI", text="ROI", font=font_headline)
+        self.pushButton_result_Clear = QtWidgets.QPushButton(self.groupBox_result)
+        self.__create_element(self.pushButton_result_Clear, [450, 735 + self.groupbox_os_displ, 80, 22], "pushButton_result_Clear", text="Clear", font=font_headline)
 
         # Menu and statusbar
         MainWindow.setCentralWidget(self.centralwidget)
@@ -263,6 +265,8 @@ class GUI(Ui_MainWindow):
         self.pushButton_result_roi_turn.clicked.connect(self.f_buttons_roi)
         self.pushButton_result_integratedRoi_export.clicked.connect(self.f_button_roi_export)
         self.pushButton_result_swapAB.clicked.connect(self.f_diffLine)
+        self.pushButton_result_Clear.clicked.connect(self.f_button_clear)
+
 
         self.checkBox_result_f_numberOfPixels_reduce_by2.stateChanged.connect(self.f_numberOfPixels_reduce)
         self.checkBox_result_f_numberOfPixels_reduce_by4.stateChanged.connect(self.f_numberOfPixels_reduce)
@@ -278,15 +282,7 @@ class GUI(Ui_MainWindow):
 
         self.action_version.triggered.connect(self.f_menu_info)
 
-        # use arrays to keep old "lines" and redraw only if they are different from new ones
-        self.line_A, self.line_B = ["", ""], ["", ""]
-        self.roi_show, self.roi_turn, self.roi_draw_result, self.roi_initial = 0, 0, [], []
-        self.detectorImage_A, self.detectorImage_B = [], []
-        self.res_lin, self.res_draw = [], []
-
-        # I will use self.interface_A and self.interface_B to track what was
-        # changed on the form and do changes without creating too many functions
-        self.lastType_A, self.lastType_B = [], []
+        self.f_button_clear()
 
     def f_button_importScan(self):
         if self.sender().objectName() == "toolButton_scan_A":
@@ -357,10 +353,25 @@ class GUI(Ui_MainWindow):
         dir = QtWidgets.QFileDialog().getExistingDirectory(None, "FileNames", self.dir_current)
         if dir == "": return
 
-        with open(dir + "/2D_map (" + self.lineEdit_result_operation.text() + ").dat", "w") as new_file_2d_map:
-            for line in self.res:
+        exportFile_name = f"A({self.lineEdit_scan_A_name.text()[self.lineEdit_scan_A_name.text().rfind('/') + 1:]})_B({self.lineEdit_scan_B_name.text()[self.lineEdit_scan_B_name.text().rfind('/') + 1:]}) --- {self.lineEdit_result_operation.text()}"
+        with open(dir + "/" + exportFile_name.replace(" ", "") + "--- 2Dmap).dat", "w") as new_file_2d_map:
+            for line in np.swapaxes(self.res_lin, 0,1):
                 for row in line: new_file_2d_map.write(str(int(row)) + " ")
                 new_file_2d_map.write("\n")
+
+    def f_button_clear(self):
+        # use arrays to keep old "lines" and redraw only if they are different from new ones
+        self.line_A, self.line_B = ["", ""], ["", ""]
+        self.roi_show, self.roi_turn, self.roi_draw_result, self.roi_initial = 0, 0, [], []
+        self.detectorImage_A, self.detectorImage_B = [], []
+        self.res_lin, self.res_draw = [], []
+
+        # I will use self.interface_A and self.interface_B to track what was
+        # changed on the form and do changes without creating too many functions
+        self.lastType_A, self.lastType_B = [], []
+
+        [i.clear() for i in [self.lineEdit_scan_A_name, self.lineEdit_scan_B_name, self.graphicsView_scan_A, self.graphicsView_scan_B, self.graphicsView_result, self.graphicsView_result_integratedRoi]]
+        self.statusbar.clearMessage()
 
     def f_interface_change(self):
 
@@ -664,7 +675,7 @@ class GUI(Ui_MainWindow):
         ####### square
         if self.sender().objectName() in ["comboBox_scan_A_type", "comboBox_scan_B_type"]:
             if self.comboBox_scan_A_type.currentText() == "2D map" or self.comboBox_scan_B_type.currentText() == "2D map":
-                self.lineEdit_result_roi_bottom.setText(str(res.shape[1]))
+                self.lineEdit_result_roi_bottom.setText(str(self.res_lin.shape[1]))
                 self.lineEdit_result_roi_top.setText("0")
             elif not self.roi_initial == []:
                 self.lineEdit_result_roi_bottom.setText(self.roi_initial[2])
@@ -687,7 +698,8 @@ class GUI(Ui_MainWindow):
         dir = QtWidgets.QFileDialog().getExistingDirectory(None, "FileNames", self.dir_current)
         if dir == "": return
 
-        with open(dir + "/ROI (" + self.lineEdit_result_operation.text() + ").dat", "w") as new_file_roi:
+        exportFile_name = f"A({self.lineEdit_scan_A_name.text()[self.lineEdit_scan_A_name.text().rfind('/')+1:]})_B({self.lineEdit_scan_B_name.text()[self.lineEdit_scan_B_name.text().rfind('/')+1:]}) --- {self.lineEdit_result_operation.text()}"
+        with open(dir + "/" + exportFile_name.replace(" ", "") + "--- ROI).dat", "w") as new_file_roi:
             for i in range(0, len(self.roi_plot_export[0])):
                 new_file_roi.write(str(self.roi_plot_export[0][i]) + " " + str(self.roi_plot_export[1][i]) )
                 new_file_roi.write("\n")
